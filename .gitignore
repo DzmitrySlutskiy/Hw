@@ -34,7 +34,6 @@ proguard/
 #idea task_manager/.idea/
 *.iml
 .idea
-*.iml
 
 gradlew
 gradlew.bat
