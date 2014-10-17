@@ -4,5 +4,11 @@
     <string name="app_name">Hw</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="list_item_icon">list item icon</string>
+    <string name="empty">Empty list</string>
+    <string name="error">error_loading</string>
+    <string name="add_new_item">Add new item</string>
+    <string name="text1">text1</string>
+    <string name="text2">text2</string>
 
 </resources>
