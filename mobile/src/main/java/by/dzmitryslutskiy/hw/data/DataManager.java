@@ -2,7 +2,7 @@ package by.dzmitryslutskiy.hw.data;
 
 import android.os.Handler;
 
-import java.util.List;
+import by.dzmitryslutskiy.hw.processing.Processor;
 
 /**
  * DataManager
@@ -12,13 +12,20 @@ import java.util.List;
  */
 public class DataManager {
 
-    public static interface Callback {
+    public static interface Callback<Result> {
         void onDataLoadStart();
-        void onDone(List<TypeA> data);
+
+        void onDone(Result data);
+
         void onError(Exception e);
     }
 
-    public static void loadData(final Callback callback) {
+    public static <ProcessingResult, DataSourceResult, Params> void
+    loadData(
+            final Callback<ProcessingResult> callback,
+            final Params params,
+            final DataSource<DataSourceResult, Params> dataSource,
+            final Processor<ProcessingResult, DataSourceResult> processor) {
         if (callback == null) {
             throw new IllegalArgumentException("callback can't be null");
         }
@@ -28,11 +35,12 @@ public class DataManager {
             @Override
             public void run() {
                 try {
-                    final List<TypeA> data = DataSource.getData();
+                    final DataSourceResult result = dataSource.getResult(params);
+                    final ProcessingResult processingResult = processor.process(result);
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            callback.onDone(data);
+                            callback.onDone(processingResult);
                         }
                     });
                 } catch (final Exception e) {
@@ -46,5 +54,4 @@ public class DataManager {
             }
         }).start();
     }
-
 }

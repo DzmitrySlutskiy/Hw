@@ -1,105 +1,123 @@
 package by.dzmitryslutskiy.hw.ui.activities;
 
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ListView;
-import android.widget.ProgressBar;
+import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import by.dzmitryslutskiy.hw.R;
+import by.dzmitryslutskiy.hw.callbacks.SimpleCallback;
+import by.dzmitryslutskiy.hw.data.ArrayStringDataSource;
 import by.dzmitryslutskiy.hw.data.DataManager;
-import by.dzmitryslutskiy.hw.data.TypeA;
-import by.dzmitryslutskiy.hw.data.TypeFactory;
-import by.dzmitryslutskiy.hw.ui.adapters.SampleAdapter;
+import by.dzmitryslutskiy.hw.data.HttpDataSource;
+import by.dzmitryslutskiy.hw.data.HttpRequestParam;
+import by.dzmitryslutskiy.hw.processing.RedirectProcessor;
+import by.dzmitryslutskiy.hw.processing.StringProcessor;
 
 
-public class MainActivity extends ActionBarActivity implements DataManager.Callback {
+public class MainActivity extends ActionBarActivity implements DataManager.Callback<ArrayList<String>> {
 
-    private TextView textViewEmpty;
-    private TextView textViewError;
-    private ProgressBar progressBar;
-    private ListView mListView;
-    private Button mButton;
+    private ArrayAdapter<String> mAdapter;
+
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle pSavedInstanceState) {
+        super.onCreate(pSavedInstanceState);
         setContentView(R.layout.activity_main);
-        textViewEmpty = (TextView) findViewById(android.R.id.empty);
-        textViewError = (TextView) findViewById(R.id.error);
-        progressBar = (ProgressBar) findViewById(android.R.id.progress);
-        mListView = (ListView) findViewById(android.R.id.list);
-        mButton = (Button) findViewById(R.id.button_add);
-        DataManager.loadData(this);
-    }
+        final ArrayStringDataSource dataSource = new ArrayStringDataSource();
+        final RedirectProcessor<ArrayList<String>> arrayRedirectProcessor = new RedirectProcessor<ArrayList<String>>();
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_container);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                DataManager.loadData(MainActivity.this, null, dataSource, arrayRedirectProcessor);
+            }
+        });
+        DataManager.loadData(this, null, dataSource, arrayRedirectProcessor);
 
+        HttpDataSource httpDataSource = HttpDataSource.get(this);
+        SimpleCallback<String> callback = new SimpleCallback<String>() {
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
+            @Override
+            public void onDone(Object data) {
+                Log.d("MainActivity", "onDone " + data);
+            }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+        };
+        HttpRequestParam param = HttpRequestParam.newInstance(HttpRequestParam.HttpType.GET, "https://dl.dropboxusercontent.com/u/16403954/test.json");
+        StringProcessor stringProcessor = new StringProcessor();
+        DataManager.loadData(
+                callback,
+                param,
+                httpDataSource,
+                stringProcessor
+        );
+        param = HttpRequestParam.newInstance(HttpRequestParam.HttpType.GET, "http://google.com");
+        DataManager.loadData(
+                callback,
+                param,
+                httpDataSource,
+                stringProcessor);
     }
 
     @Override
     public void onDataLoadStart() {
-        progressBar.setVisibility(View.VISIBLE);
-        textViewEmpty.setVisibility(View.GONE);
-        mButton.setEnabled(false);
+        if (! mSwipeRefreshLayout.isRefreshing()) {
+            findViewById(android.R.id.progress).setVisibility(View.VISIBLE);
+        }
+        findViewById(android.R.id.empty).setVisibility(View.GONE);
     }
 
     @Override
-    public void onDone(List<TypeA> data) {
-        progressBar.setVisibility(View.GONE);
-        if (data == null || data.isEmpty()) {
-            textViewEmpty.setVisibility(View.VISIBLE);
+    public void onDone(ArrayList<String> data) {
+        if (mSwipeRefreshLayout.isRefreshing()) {
+            mSwipeRefreshLayout.setRefreshing(false);
         }
-        mButton.setEnabled(true);
+        findViewById(android.R.id.progress).setVisibility(View.GONE);
+        if (data == null || data.isEmpty()) {
+            findViewById(android.R.id.empty).setVisibility(View.VISIBLE);
+        }
+        AdapterView listView = (AbsListView) findViewById(android.R.id.list);
+        if (mAdapter == null) {
+            mAdapter = new ArrayAdapter<String>(this, R.layout.adapter_item, android.R.id.text1, data) {
 
-        SampleAdapter adapter = new SampleAdapter(this, data);
-        mListView.setAdapter(adapter);
+                @Override
+                public View getView(int position, View convertView, ViewGroup parent) {
+                    if (convertView == null) {
+                        convertView = View.inflate(MainActivity.this, R.layout.adapter_item, null);
+                    }
+                    String item = getItem(position);
+                    TextView textView1 = (TextView) convertView.findViewById(android.R.id.text1);
+                    textView1.setText(item);
+                    TextView textView2 = (TextView) convertView.findViewById(android.R.id.text2);
+                    textView2.setText(item.substring(5));
+                    return convertView;
+                }
+
+            };
+            listView.setAdapter(mAdapter);
+        } else {
+            //only for honeycomb
+            mAdapter.addAll(data);
+        }
     }
 
     @Override
     public void onError(Exception e) {
-        progressBar.setVisibility(View.GONE);
-        textViewEmpty.setVisibility(View.GONE);
-        mButton.setEnabled(false);
-
-        textViewError.setVisibility(View.VISIBLE);
-        textViewError.setText(getString(R.string.error) + "\n" + e.getMessage());
+        findViewById(android.R.id.progress).setVisibility(View.GONE);
+        findViewById(android.R.id.empty).setVisibility(View.GONE);
+        TextView errorView = (TextView) findViewById(R.id.error);
+        errorView.setVisibility(View.VISIBLE);
+        errorView.setText(errorView.getText() + "\n" + e.getMessage());
     }
 
-    private static int manualAdded = 0;
-
-    public void onAddItem(View view) {
-        TypeA newItem = TypeFactory.getNewItem(
-                R.drawable.ic_launcher,
-                "", "manual added [" + (++ manualAdded) + "]", R.drawable.ic_launcher);
-        SampleAdapter adapter = (SampleAdapter) mListView.getAdapter();
-        if (adapter != null) {
-            adapter.addItem(newItem);
-        }
-    }
 }
