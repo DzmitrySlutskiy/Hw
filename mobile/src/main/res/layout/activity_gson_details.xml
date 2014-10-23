@@ -1,0 +1,52 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingLeft="@dimen/activity_horizontal_margin"
+                android:paddingRight="@dimen/activity_horizontal_margin"
+                android:paddingTop="48dip"
+                android:paddingBottom="48dip"
+                tools:context=".GsonDetailsActivity">
+
+    <LinearLayout
+        android:id="@+id/button_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onJsonToNote"
+            android:text="@string/source_to_obj"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onNoteToJson"
+            android:text="@string/obj_to_string"/>
+    </LinearLayout>
+
+    <TextView
+        android:padding="16dp"
+        android:id="@+id/json_source_string"
+        android:layout_below="@id/button_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+
+    <TextView
+        android:padding="16dp"
+        android:id="@+id/obj_string"
+        android:layout_below="@id/json_source_string"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+
+    <TextView
+        android:padding="16dp"
+        android:id="@+id/json_final_string"
+        android:layout_below="@id/obj_string"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+</RelativeLayout>

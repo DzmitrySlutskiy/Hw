@@ -10,5 +10,9 @@
     <string name="add_new_item">Add new item</string>
     <string name="text1">text1</string>
     <string name="text2">text2</string>
+    <string name="title_details_activity">detail activity</string>
+    <string name="action_gson_test">gson test</string>
+    <string name="source_to_obj">source json to obj</string>
+    <string name="obj_to_string">obj to string</string>
 
 </resources>

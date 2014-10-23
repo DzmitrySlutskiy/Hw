@@ -1,10 +1,7 @@
 package by.dzmitryslutskiy.hw.data;
 
-import android.text.format.DateUtils;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Classname
@@ -25,7 +22,7 @@ public class ArrayStringDataSource implements DataSource<ArrayList<String>, Void
 
 
     public static List<String> getData() throws Exception {
-        TimeUnit.MILLISECONDS.sleep(500);
+//        TimeUnit.MILLISECONDS.sleep(500);
         return (List<String>) DATA.clone();
     }
 
