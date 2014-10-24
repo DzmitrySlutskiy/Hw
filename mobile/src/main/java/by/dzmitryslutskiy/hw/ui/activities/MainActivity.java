@@ -4,8 +4,11 @@ import android.annotation.TargetApi;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -13,34 +16,58 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import by.dzmitryslutskiy.hw.R;
+import by.dzmitryslutskiy.hw.asyncwork.ListNoteLoader;
+import by.dzmitryslutskiy.hw.asyncwork.TestTask;
 import by.dzmitryslutskiy.hw.bo.Note;
 import by.dzmitryslutskiy.hw.data.DataManager;
 import by.dzmitryslutskiy.hw.data.HttpDataSource;
 import by.dzmitryslutskiy.hw.data.HttpRequestParam;
 import by.dzmitryslutskiy.hw.processing.NoteArrayProcessor;
-import by.dzmitryslutskiy.hw.processing.StringProcessor;
 
 
 public class MainActivity extends ActionBarActivity implements DataManager.Callback<List<Note>> {
 
     public static final String URL = "https://dl.dropboxusercontent.com/u/16403954/test.json";
+    private static final String LOG_TAG = "MainActivity";
+
     private ArrayAdapter mAdapter;
 
+    private StringLoaderCallback mStringCallback;
+
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private String mResultString;
+    private AdapterView listView;
+    private View progress;
+    private TextView errorView;
+    ListView async_test;
+    List<String> list;
+    private View empty;
+    private List<Note> mData;
+    ArrayAdapter adapter;
     @Override
     protected void onCreate(Bundle pSavedInstanceState) {
         super.onCreate(pSavedInstanceState);
         setContentView(R.layout.activity_main);
+
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_container);
+        progress = findViewById(android.R.id.progress);
+        empty = findViewById(android.R.id.empty);
+        listView = (AbsListView) findViewById(android.R.id.list);
+        errorView = (TextView) findViewById(R.id.error);
+        async_test = (ListView) findViewById(R.id.async_test);
+
+        list= new ArrayList<String>();
+        adapter= new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,list);
+        async_test.setAdapter(adapter);
+
         final HttpDataSource dataSource = HttpDataSource.get(MainActivity.this);
         final NoteArrayProcessor processor = new NoteArrayProcessor();
-        final StringProcessor strProcessor = new StringProcessor();
 
         final HttpRequestParam param = HttpRequestParam.newInstance(HttpRequestParam.HttpType.GET, URL);
 
@@ -54,28 +81,23 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
             }
         });
 
-        final HttpRequestParam param2 = HttpRequestParam.newInstance(HttpRequestParam.HttpType.GET, URL);
-        DataManager.loadData(MainActivity.this,
-                param2,
-                dataSource,
-                processor);
+        initLoader();
+    }
 
-        final HttpRequestParam param3 = HttpRequestParam.newInstance(HttpRequestParam.HttpType.GET, URL);
-        DataManager.loadData(new StringOnDone(),
-                param3,
-                dataSource,
-                strProcessor);
+    private void initLoader() {
+        Bundle bundle = new Bundle();
+        bundle.putString(ListNoteLoader.PARAM_URL, URL);
+        getSupportLoaderManager().initLoader(((Object) this).hashCode(), bundle, getStringCallback());
     }
 
     @Override
     public void onDataLoadStart() {
         if (! mSwipeRefreshLayout.isRefreshing()) {
-            findViewById(android.R.id.progress).setVisibility(View.VISIBLE);
+            progress.setVisibility(View.VISIBLE);
         }
-        findViewById(android.R.id.empty).setVisibility(View.GONE);
+        empty.setVisibility(View.GONE);
     }
 
-    private List<Note> mData;
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override
@@ -83,11 +105,11 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
         if (mSwipeRefreshLayout.isRefreshing()) {
             mSwipeRefreshLayout.setRefreshing(false);
         }
-        findViewById(android.R.id.progress).setVisibility(View.GONE);
+        progress.setVisibility(View.GONE);
         if (data == null || data.isEmpty()) {
-            findViewById(android.R.id.empty).setVisibility(View.VISIBLE);
+            empty.setVisibility(View.VISIBLE);
         }
-        AdapterView listView = (AbsListView) findViewById(android.R.id.list);
+
         if (mAdapter == null) {
             mData = data;
             mAdapter = new ArrayAdapter<Note>(this, R.layout.adapter_item, android.R.id.text1, data) {
@@ -126,31 +148,11 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
         }
     }
 
-
-    class StringOnDone implements DataManager.Callback<String>{
-
-        @Override
-        public void onDataLoadStart() {
-
-        }
-
-        @Override
-        public void onDone(String data) {
-            mResultString = data;
-        }
-
-        @Override
-        public void onError(Exception e) {
-
-        }
-    }
-
     @Override
     public void onError(Exception e) {
         e.printStackTrace();
-        findViewById(android.R.id.progress).setVisibility(View.GONE);
-        findViewById(android.R.id.empty).setVisibility(View.GONE);
-        TextView errorView = (TextView) findViewById(R.id.error);
+        progress.setVisibility(View.GONE);
+        empty.setVisibility(View.GONE);
         errorView.setVisibility(View.VISIBLE);
         errorView.setText(errorView.getText() + "\n" + e.getMessage());
     }
@@ -172,19 +174,73 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
 
         switch (item.getItemId()) {
             case R.id.action_settings:
+                Log.d(LOG_TAG, "do System.gc()");
+                System.gc();
                 return true;
 
-            case R.id.action_gson_test:
-                Intent intent = new Intent(MainActivity.this, GsonDetailsActivity.class);
-
-                intent.putExtra(GsonDetailsActivity.FULL, mResultString);
-                startActivity(intent);
+            case R.id.action_task:
+                Log.d(LOG_TAG, "do AsyncTask()");
+                TestTask.init();
+                for (int i = 0; i < 5; i++) {
+                    TestTask task = new TestTask(mCall);
+                    task.execute("" + i);
+                }
                 return true;
 
+            case R.id.action_restart_loader:
+                Bundle bundle = new Bundle();
+                bundle.putString(ListNoteLoader.PARAM_URL, URL);
+                Log.d(LOG_TAG, "do restartLoader");
+                getSupportLoaderManager().restartLoader(((Object) this).hashCode(), bundle, getStringCallback());
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
+    private TestCallbackImpl mCall = new TestCallbackImpl();
+
+    private class TestCallbackImpl implements TestTask.TestCallback {
+
+        @Override
+        public void onProgress(String... values) {
+            list.add(values[0]);
+            adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onFinish(String result) {
+            list.add(result);
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    private StringLoaderCallback getStringCallback() {
+        if (mStringCallback == null) {
+            mStringCallback = new StringLoaderCallback();
+        }
+        return mStringCallback;
+    }
+
+    private class StringLoaderCallback implements LoaderManager.LoaderCallbacks<List<Note>> {
+
+        @Override
+        public Loader<List<Note>> onCreateLoader(int i, Bundle bundle) {
+            Log.d(LOG_TAG, "onCreateLoader:" + i);
+            return new ListNoteLoader(getApplicationContext(),
+                    bundle.getString(ListNoteLoader.PARAM_URL));
+        }
+
+        @Override
+        public void onLoadFinished(Loader<List<Note>> loader, List<Note> s) {
+            Log.d(LOG_TAG, "onLoadFinished:" + s);
+            onDone(s);
+        }
+
+        @Override
+        public void onLoaderReset(Loader<List<Note>> loader) {
+            Log.d(LOG_TAG, "onLoaderReset");
+        }
+    }
 
 }

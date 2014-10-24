@@ -14,5 +14,7 @@
     <string name="action_gson_test">gson test</string>
     <string name="source_to_obj">source json to obj</string>
     <string name="obj_to_string">obj to string</string>
+    <string name="action_restart_loader">restart loader</string>
+    <string name="action_async_task">asyncTest</string>
 
 </resources>

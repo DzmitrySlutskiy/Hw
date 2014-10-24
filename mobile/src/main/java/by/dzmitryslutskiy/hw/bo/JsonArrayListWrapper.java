@@ -2,6 +2,7 @@ package by.dzmitryslutskiy.hw.bo;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.support.v4.util.LruCache;
 
 import org.json.JSONArray;
 
@@ -20,6 +21,7 @@ public class JsonArrayListWrapper<T extends JsonObjectWrapper> implements List<T
 
     private CreateObject<T> mCreator;
     private JSONArray mArray;
+    private LruCache<Integer, Note> cache = new LruCache<Integer, Note>(20);
 
     public JsonArrayListWrapper(JSONArray array, CreateObject<T> creator) throws Exception {
         this.mCreator = creator;
@@ -43,12 +45,13 @@ public class JsonArrayListWrapper<T extends JsonObjectWrapper> implements List<T
 
     @Override
     public boolean addAll(Collection<? extends T> collection) {
-        throw new UnsupportedOperationException("Not implemented");
+        mArray = ((JsonArrayListWrapper) collection).mArray;
+        return true;
     }
 
     @Override
     public void clear() {
-        throw new UnsupportedOperationException("Not implemented");
+        mArray = null;
     }
 
     @Override
@@ -65,6 +68,7 @@ public class JsonArrayListWrapper<T extends JsonObjectWrapper> implements List<T
     public T get(int location) {
         try {
             Log.d("get in arrays", "get " + location);
+            cache.get(location);
             return mCreator.createObject(mArray.getJSONObject(location));
         } catch (Exception e) {
             throw new RuntimeException(e);
