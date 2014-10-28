@@ -16,5 +16,8 @@
     <string name="obj_to_string">obj to string</string>
     <string name="action_restart_loader">restart loader</string>
     <string name="action_async_task">asyncTest</string>
+    <string name="action_insert">insert</string>
+    <string name="update">Update</string>
+    <string name="cancel">cancel</string>
 
 </resources>

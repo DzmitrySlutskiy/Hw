@@ -1,7 +1,10 @@
 package by.dzmitryslutskiy.hw.ui.activities;
 
 import android.annotation.TargetApi;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
@@ -12,44 +15,45 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import by.dzmitryslutskiy.hw.R;
 import by.dzmitryslutskiy.hw.asyncwork.ListNoteLoader;
+import by.dzmitryslutskiy.hw.asyncwork.NoteLoader;
 import by.dzmitryslutskiy.hw.asyncwork.TestTask;
 import by.dzmitryslutskiy.hw.bo.Note;
 import by.dzmitryslutskiy.hw.data.DataManager;
 import by.dzmitryslutskiy.hw.data.HttpDataSource;
 import by.dzmitryslutskiy.hw.data.HttpRequestParam;
 import by.dzmitryslutskiy.hw.processing.NoteArrayProcessor;
+import by.dzmitryslutskiy.hw.processing.StringProcessor;
+import by.dzmitryslutskiy.hw.providers.Contracts.NoteContract;
+import by.dzmitryslutskiy.hw.ui.adapters.NoteAdapter;
 
 
-public class MainActivity extends ActionBarActivity implements DataManager.Callback<List<Note>> {
+public class MainActivity extends ActionBarActivity implements DataManager.Callback<Cursor> {
 
     public static final String URL = "https://dl.dropboxusercontent.com/u/16403954/test.json";
     private static final String LOG_TAG = "MainActivity";
 
-    private ArrayAdapter mAdapter;
+    private NoteAdapter mAdapter;
 
-    private StringLoaderCallback mStringCallback;
+    private CursorLoaderCallback mCursorCallback;
 
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private AdapterView listView;
     private View progress;
     private TextView errorView;
-    ListView async_test;
     List<String> list;
     private View empty;
-    private List<Note> mData;
     ArrayAdapter adapter;
+
     @Override
     protected void onCreate(Bundle pSavedInstanceState) {
         super.onCreate(pSavedInstanceState);
@@ -60,11 +64,6 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
         empty = findViewById(android.R.id.empty);
         listView = (AbsListView) findViewById(android.R.id.list);
         errorView = (TextView) findViewById(R.id.error);
-        async_test = (ListView) findViewById(R.id.async_test);
-
-        list= new ArrayList<String>();
-        adapter= new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,list);
-        async_test.setAdapter(adapter);
 
         final HttpDataSource dataSource = HttpDataSource.get(MainActivity.this);
         final NoteArrayProcessor processor = new NoteArrayProcessor();
@@ -74,20 +73,48 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                DataManager.loadData(MainActivity.this,
-                        param,
-                        dataSource,
-                        processor);
+//                DataManager.loadData(MainActivity.this,
+//                        param,
+//                        dataSource,
+//                        processor);
+                mSwipeRefreshLayout.setRefreshing(false);
             }
         });
 
+        DataManager.loadDataInLoader(MainActivity.this, new SelfCallback(),
+                param,
+                dataSource,
+                new StringProcessor());
+
         initLoader();
+    }
+
+    private class SelfCallback implements DataManager.Callback<String> {
+
+        @Override
+        public void onDataLoadStart() {
+            Log.d(LOG_TAG, "onDataLoadStart");
+        }
+
+        @Override
+        public void onDone(String data) {
+            Log.d(LOG_TAG, "onDone: " + data);
+            Toast.makeText(getApplicationContext(), "onDone loader in DataManager. data:" + data,
+                    Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onError(Exception e) {
+            Log.d(LOG_TAG, "onError: " + e);
+            Toast.makeText(getApplicationContext(), "onError loader in DataManager. e:" + e,
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void initLoader() {
         Bundle bundle = new Bundle();
         bundle.putString(ListNoteLoader.PARAM_URL, URL);
-        getSupportLoaderManager().initLoader(((Object) this).hashCode(), bundle, getStringCallback());
+        getSupportLoaderManager().initLoader(((Object) this).hashCode(), bundle, getCursorCallback());
     }
 
     @Override
@@ -101,50 +128,40 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override
-    public void onDone(List<Note> data) {
+    public void onDone(Cursor data) {
         if (mSwipeRefreshLayout.isRefreshing()) {
             mSwipeRefreshLayout.setRefreshing(false);
         }
         progress.setVisibility(View.GONE);
-        if (data == null || data.isEmpty()) {
+        if (data == null) {
             empty.setVisibility(View.VISIBLE);
         }
 
         if (mAdapter == null) {
-            mData = data;
-            mAdapter = new ArrayAdapter<Note>(this, R.layout.adapter_item, android.R.id.text1, data) {
-
-                @Override
-                public View getView(int position, View convertView, ViewGroup parent) {
-                    if (convertView == null) {
-                        convertView = View.inflate(MainActivity.this, R.layout.adapter_item, null);
-                    }
-                    Note item = getItem(position);
-                    TextView textView1 = (TextView) convertView.findViewById(android.R.id.text1);
-                    textView1.setText(item.getTitle());
-                    TextView textView2 = (TextView) convertView.findViewById(android.R.id.text2);
-                    textView2.setText(item.getContent());
-                    convertView.setTag(item.getId());
-                    return convertView;
-                }
-
-            };
+            mAdapter = new NoteAdapter(this, data);
             listView.setAdapter(mAdapter);
             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     Intent intent = new Intent(MainActivity.this, DetailsActivity.class);
                     Note item = (Note) mAdapter.getItem(position);
-                    /*NoteGsonModel note = new NoteGsonModel(item.getId(), item.getTitle(), item.getContent());
-                    intent.putExtra("item", note);*/
+
                     intent.putExtra("item", item);
                     startActivity(intent);
                 }
             });
+            listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+                @Override
+                public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+
+                    getContentResolver().delete(
+                            Uri.withAppendedPath(NoteContract.CONTENT_URI, "" + id),
+                            null, null);
+                    return true;
+                }
+            });
         } else {
-            mData.clear();
-            mData.addAll(data);
-            mAdapter.notifyDataSetChanged();
+            mAdapter.swapCursor(data);
         }
     }
 
@@ -180,18 +197,19 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
 
             case R.id.action_task:
                 Log.d(LOG_TAG, "do AsyncTask()");
-                TestTask.init();
-                for (int i = 0; i < 5; i++) {
-                    TestTask task = new TestTask(mCall);
-                    task.execute("" + i);
-                }
+
+                ContentValues values = new ContentValues();
+                values.put(NoteContract.COLUMN_TITLE, "Title");
+                values.put(NoteContract.COLUMN_CONTENT, "Content");
+                getContentResolver().insert(NoteContract.CONTENT_URI, values);
                 return true;
 
             case R.id.action_restart_loader:
                 Bundle bundle = new Bundle();
                 bundle.putString(ListNoteLoader.PARAM_URL, URL);
                 Log.d(LOG_TAG, "do restartLoader");
-                getSupportLoaderManager().restartLoader(((Object) this).hashCode(), bundle, getStringCallback());
+
+                getSupportLoaderManager().restartLoader(((Object) this).hashCode(), bundle, getCursorCallback());
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -215,30 +233,30 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
         }
     }
 
-    private StringLoaderCallback getStringCallback() {
-        if (mStringCallback == null) {
-            mStringCallback = new StringLoaderCallback();
+    private CursorLoaderCallback getCursorCallback() {
+        if (mCursorCallback == null) {
+            mCursorCallback = new CursorLoaderCallback();
         }
-        return mStringCallback;
+        return mCursorCallback;
     }
 
-    private class StringLoaderCallback implements LoaderManager.LoaderCallbacks<List<Note>> {
+    private class CursorLoaderCallback implements LoaderManager.LoaderCallbacks<Cursor> {
 
         @Override
-        public Loader<List<Note>> onCreateLoader(int i, Bundle bundle) {
+        public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
             Log.d(LOG_TAG, "onCreateLoader:" + i);
-            return new ListNoteLoader(getApplicationContext(),
-                    bundle.getString(ListNoteLoader.PARAM_URL));
+            return new NoteLoader(getApplicationContext());
         }
 
         @Override
-        public void onLoadFinished(Loader<List<Note>> loader, List<Note> s) {
+        public void onLoadFinished(Loader<Cursor> loader, Cursor s) {
             Log.d(LOG_TAG, "onLoadFinished:" + s);
+            Toast.makeText(getApplicationContext(), "onLoadFinish", Toast.LENGTH_SHORT).show();
             onDone(s);
         }
 
         @Override
-        public void onLoaderReset(Loader<List<Note>> loader) {
+        public void onLoaderReset(Loader<Cursor> loader) {
             Log.d(LOG_TAG, "onLoaderReset");
         }
     }

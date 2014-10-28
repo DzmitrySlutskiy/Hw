@@ -4,13 +4,7 @@
                 android:layout_height="match_parent"
                 tools:context=".MainActivity">
 
-    <ListView
-        android:id="@+id/async_test"
-        android:layout_width="match_parent"
-        android:layout_height="200dp"/>
-
     <android.support.v4.widget.SwipeRefreshLayout
-        android:layout_below="@id/async_test"
         android:id="@+id/swipe_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
