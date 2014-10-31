@@ -6,17 +6,16 @@ import android.net.Uri;
 import java.util.HashMap;
 
 /**
- * NoteContract
+ * UserContract
  * Version 1.0
  * 28.10.2014
  * Created by Dzmitry Slutskiy.
  */
-public class NoteContract {
+public class UserContract {
 
-    public static final String PATH = "Note";
+    public static final String PATH = "User";
 
-    public static final String COLUMN_TITLE = "title";
-    public static final String COLUMN_CONTENT = "content";
+    public static final String COLUMN_NAME = "name";
     public static final String COLUMN_ID = TestProviderContract.COLUMN_ID_DEFAULT;
 
     public static final Uri CONTENT_URI =
@@ -26,21 +25,19 @@ public class NoteContract {
             + PATH
             + "("
             + COLUMN_ID + " integer primary key autoincrement, "
-            + COLUMN_TITLE + " text, "
-            + COLUMN_CONTENT + " text );";
+            + COLUMN_NAME + " text );";
 
     public static final HashMap<String, String> PROJECTION_MAP = new HashMap<String, String>();
 
     public static final String[] defaultColumns =
-            new String[]{COLUMN_ID, COLUMN_TITLE, COLUMN_CONTENT};
+            new String[]{COLUMN_ID, COLUMN_NAME};
 
     private static final String[] availableColumns =
-            new String[]{COLUMN_ID, COLUMN_TITLE, COLUMN_CONTENT};
+            new String[]{COLUMN_ID, COLUMN_NAME};
 
     static {
         PROJECTION_MAP.put(COLUMN_ID, PATH + "." + COLUMN_ID);
-        PROJECTION_MAP.put(COLUMN_TITLE, PATH + "." + COLUMN_TITLE);
-        PROJECTION_MAP.put(COLUMN_CONTENT, PATH + "." + COLUMN_CONTENT);
+        PROJECTION_MAP.put(COLUMN_NAME, PATH + "." + COLUMN_NAME);
     }
 
     public static void onCreate(SQLiteDatabase database) {
@@ -53,6 +50,6 @@ public class NoteContract {
         onCreate(database);
     }
 
-    private NoteContract() {/*   code    */}
+    private UserContract() {/*   code    */}
 
 }
