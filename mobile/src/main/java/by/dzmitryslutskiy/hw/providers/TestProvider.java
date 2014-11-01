@@ -6,6 +6,7 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.util.Arrays;
@@ -15,7 +16,7 @@ import by.dzmitryslutskiy.hw.providers.Contracts.TestProviderContract;
 import by.dzmitryslutskiy.hw.providers.Contracts.UserContract;
 
 /**
- * Classname
+ * TestProvider
  * Version information
  * 28.10.2014
  * Created by Dzmitry Slutskiy.
@@ -31,6 +32,9 @@ public class TestProvider extends ContentProvider {
     private static final int CODE_USER = 30;
     private static final int CODE_USER_ID = 40;
     private static final int CODE_USER_ID_NEG = 41;
+
+    private static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/";
+    private static final String CONTENT_DIR_TYPE = "vnd.android.cursor.dir/";
 
     private static final UriMatcher sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
@@ -58,16 +62,15 @@ public class TestProvider extends ContentProvider {
         return false;
     }
 
-
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-        String tableName = getTableNameByUri(uri);
-        selection = buildSelection(uri, selection);
-        selectionArgs = buildSelectionArgs(uri, selectionArgs);
 
         try {
-            Cursor cursor = mDBHelper.query(tableName, projection,
-                    selection, selectionArgs, null, null, sortOrder);
+            Cursor cursor = mDBHelper.query(getTableNameByUri(uri),
+                    projection,
+                    buildSelection(uri, selection),
+                    buildSelectionArgs(uri, selectionArgs),
+                    null, null, sortOrder);
 
             cursor.setNotificationUri(getContext().getContentResolver(), uri);
 
@@ -82,7 +85,24 @@ public class TestProvider extends ContentProvider {
 
     @Override
     public String getType(Uri uri) {
-        return null;
+        switch (sURIMatcher.match(uri)) {
+            case CODE_NOTE:
+                return CONTENT_DIR_TYPE + NoteContract.PATH;
+
+            case CODE_USER:
+                return CONTENT_DIR_TYPE + UserContract.PATH;
+
+            case CODE_NOTE_ID:
+            case CODE_NOTE_ID_NEG:
+                return CONTENT_ITEM_TYPE + NoteContract.PATH;
+
+            case CODE_USER_ID:
+            case CODE_USER_ID_NEG:
+                return CONTENT_ITEM_TYPE + UserContract.PATH;
+
+            default:
+                return null;
+        }
     }
 
     @Override
@@ -90,10 +110,9 @@ public class TestProvider extends ContentProvider {
         String tableName = getTableNameByUri(uri);
 
         long id = mDBHelper.insert(tableName, null, values);
-
         getContext().getContentResolver().notifyChange(uri, null);
 
-        return Uri.withAppendedPath(TestProviderContract.AUTHORITY_URI, "/" + tableName + id);
+        return Uri.withAppendedPath(TestProviderContract.AUTHORITY_URI, "/" + tableName + "/" + id);
     }
 
     @Override
@@ -122,10 +141,7 @@ public class TestProvider extends ContentProvider {
     }
 
     @Override
-    public int bulkInsert(Uri uri, ContentValues[] values) {
-        if (values == null) {
-            return 0;
-        }
+    public int bulkInsert(Uri uri, @NonNull ContentValues[] values) {
 
         mDBHelper.insert(getTableNameByUri(uri), null, values);
         getContext().getContentResolver().notifyChange(uri, null);

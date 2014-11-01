@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import by.dzmitryslutskiy.hw.providers.Contracts.NoteContract;
 import by.dzmitryslutskiy.hw.providers.Contracts.UserContract;
@@ -28,12 +29,16 @@ class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        Log.i(LOG_TAG, "onCreate database");
+
         NoteContract.onCreate(db);
         UserContract.onCreate(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        Log.i(LOG_TAG, "onUpgrade database from ver: " + oldVersion + " to ver: " + newVersion);
+
         NoteContract.onUpgrade(db, oldVersion, newVersion);
         UserContract.onUpgrade(db, oldVersion, newVersion);
     }
@@ -64,7 +69,7 @@ class DBHelper extends SQLiteOpenHelper {
 
     /**
      * Run update or insert query. if isUpdate = false whereClause used as nullColumnHack for insert
-     * query
+     * query. Query run in transaction.
      *
      * @param table       table name
      * @param values      values for insert/update
@@ -73,9 +78,10 @@ class DBHelper extends SQLiteOpenHelper {
      * @param isUpdate    if = true used update query else used insert query
      * @return the number of rows affected by updates or number rows inserted (or -1)
      */
-    private long update(String table, ContentValues[] values, String whereClause, String[] whereArgs, boolean isUpdate) {
+    private long update(String table, ContentValues[] values, String whereClause,
+                        String[] whereArgs, boolean isUpdate) {
         SQLiteDatabase writableDatabase = getWritableDatabase();
-        long result = - 1;
+        long result = -1;
         writableDatabase.beginTransaction();
         try {
             for (ContentValues value : values) {     //more than one used for bulkInsert

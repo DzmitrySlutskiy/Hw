@@ -1,13 +1,11 @@
 package by.dzmitryslutskiy.hw.providers;
 
+import android.database.Cursor;
 import android.net.Uri;
 import android.test.ApplicationTestCase;
 
-import junit.framework.TestCase;
-
 import by.dzmitryslutskiy.hw.CoreApplication;
 import by.dzmitryslutskiy.hw.providers.Contracts.NoteContract;
-import by.dzmitryslutskiy.hw.providers.Contracts.UserContract;
 
 public class TestProviderTest extends ApplicationTestCase<CoreApplication> {
 
@@ -25,9 +23,16 @@ public class TestProviderTest extends ApplicationTestCase<CoreApplication> {
 
     public void testQuery() throws Exception {
 
-        Uri uri = Uri.withAppendedPath(NoteContract.CONTENT_URI,)
+        Cursor cursor = getContext().getContentResolver().query(NoteContract.CONTENT_URI,
+                NoteContract.defaultColumns, null, null, null);
 
-        getContext().getContentResolver().query()
+        assertEquals(cursor.getCount(), 9);
+
+        cursor = getContext().getContentResolver().query(
+                Uri.withAppendedPath(NoteContract.CONTENT_URI, Integer.toString(6)),
+                NoteContract.defaultColumns, null, null, null);
+
+        assertEquals(cursor.getCount(), 1);
     }
 
     public void testGetType() throws Exception {

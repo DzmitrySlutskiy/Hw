@@ -20,16 +20,16 @@ import by.dzmitryslutskiy.hw.providers.Contracts.NoteContract;
  */
 public class NoteAdapter extends CursorAdapter {
 
-    LayoutInflater mInflator;
+    LayoutInflater mInflater;
 
     public NoteAdapter(Context context, Cursor cursor) {
         super(context, cursor, FLAG_REGISTER_CONTENT_OBSERVER);
-        mInflator = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        View view = mInflator.inflate(R.layout.adapter_item, null);
+        View view = mInflater.inflate(R.layout.adapter_item, null);
 
         ViewHolder holder = new ViewHolder();
         holder.text1 = (TextView) view.findViewById(android.R.id.text1);
@@ -42,7 +42,8 @@ public class NoteAdapter extends CursorAdapter {
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
         ViewHolder holder = (ViewHolder) view.getTag();
-        holder.text1.setText(cursor.getString(cursor.getColumnIndex(NoteContract.COLUMN_TITLE)));
+        holder.text1.setText(cursor.getString(cursor.getColumnIndex(NoteContract.COLUMN_TITLE)) +
+                " id: " + cursor.getString(cursor.getColumnIndex(NoteContract.COLUMN_ID)));
         holder.text2.setText(cursor.getString(cursor.getColumnIndex(NoteContract.COLUMN_CONTENT)));
     }
 
