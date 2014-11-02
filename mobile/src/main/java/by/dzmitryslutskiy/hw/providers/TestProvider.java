@@ -36,21 +36,21 @@ public class TestProvider extends ContentProvider {
     private static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/";
     private static final String CONTENT_DIR_TYPE = "vnd.android.cursor.dir/";
 
-    private static final UriMatcher sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+    private static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
-    private static final Object mLocker;
-    private DBHelper mDBHelper;
+    private static final Object DB_LOCKER;
+    private static DBHelper sDBHelper;
 
     static {
-        mLocker = new Object();
+        DB_LOCKER = new Object();
         //for NoteContract
-        sURIMatcher.addURI(TestProviderContract.AUTHORITY, NoteContract.PATH, CODE_NOTE);
-        sURIMatcher.addURI(TestProviderContract.AUTHORITY, NoteContract.PATH + "/#", CODE_NOTE_ID);
-        sURIMatcher.addURI(TestProviderContract.AUTHORITY, NoteContract.PATH + "/*", CODE_NOTE_ID_NEG);
+        URI_MATCHER.addURI(TestProviderContract.AUTHORITY, NoteContract.PATH, CODE_NOTE);
+        URI_MATCHER.addURI(TestProviderContract.AUTHORITY, NoteContract.PATH + "/#", CODE_NOTE_ID);
+        URI_MATCHER.addURI(TestProviderContract.AUTHORITY, NoteContract.PATH + "/*", CODE_NOTE_ID_NEG);
         //for UserContract
-        sURIMatcher.addURI(TestProviderContract.AUTHORITY, UserContract.PATH, CODE_USER);
-        sURIMatcher.addURI(TestProviderContract.AUTHORITY, UserContract.PATH + "/#", CODE_USER_ID);
-        sURIMatcher.addURI(TestProviderContract.AUTHORITY, UserContract.PATH + "/*", CODE_USER_ID_NEG);
+        URI_MATCHER.addURI(TestProviderContract.AUTHORITY, UserContract.PATH, CODE_USER);
+        URI_MATCHER.addURI(TestProviderContract.AUTHORITY, UserContract.PATH + "/#", CODE_USER_ID);
+        URI_MATCHER.addURI(TestProviderContract.AUTHORITY, UserContract.PATH + "/*", CODE_USER_ID_NEG);
     }
 
 
@@ -66,7 +66,7 @@ public class TestProvider extends ContentProvider {
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 
         try {
-            Cursor cursor = mDBHelper.query(getTableNameByUri(uri),
+            Cursor cursor = sDBHelper.query(getTableNameByUri(uri),
                     projection,
                     buildSelection(uri, selection),
                     buildSelectionArgs(uri, selectionArgs),
@@ -85,7 +85,7 @@ public class TestProvider extends ContentProvider {
 
     @Override
     public String getType(Uri uri) {
-        switch (sURIMatcher.match(uri)) {
+        switch (URI_MATCHER.match(uri)) {
             case CODE_NOTE:
                 return CONTENT_DIR_TYPE + NoteContract.PATH;
 
@@ -109,7 +109,7 @@ public class TestProvider extends ContentProvider {
     public Uri insert(Uri uri, ContentValues values) {
         String tableName = getTableNameByUri(uri);
 
-        long id = mDBHelper.insert(tableName, null, values);
+        long id = sDBHelper.insert(tableName, null, values);
         getContext().getContentResolver().notifyChange(uri, null);
 
         return Uri.withAppendedPath(TestProviderContract.AUTHORITY_URI, "/" + tableName + "/" + id);
@@ -118,7 +118,7 @@ public class TestProvider extends ContentProvider {
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
 
-        int rowsDeleted = mDBHelper.delete(getTableNameByUri(uri),
+        int rowsDeleted = sDBHelper.delete(getTableNameByUri(uri),
                 buildSelection(uri, selection),
                 buildSelectionArgs(uri, selectionArgs));
 
@@ -130,7 +130,7 @@ public class TestProvider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 
-        int rowsUpdated = (int) mDBHelper.update(getTableNameByUri(uri),
+        int rowsUpdated = (int) sDBHelper.update(getTableNameByUri(uri),
                 values,
                 buildSelection(uri, selection),
                 buildSelectionArgs(uri, selectionArgs));
@@ -143,14 +143,14 @@ public class TestProvider extends ContentProvider {
     @Override
     public int bulkInsert(Uri uri, @NonNull ContentValues[] values) {
 
-        mDBHelper.insert(getTableNameByUri(uri), null, values);
+        sDBHelper.insert(getTableNameByUri(uri), null, values);
         getContext().getContentResolver().notifyChange(uri, null);
 
         return values.length;
     }
 
     private String getTableNameByUri(Uri uri) {
-        int matchCode = sURIMatcher.match(uri);
+        int matchCode = URI_MATCHER.match(uri);
 
         if (matchCode == UriMatcher.NO_MATCH) {
             throw new IllegalArgumentException("Unknown URI: " + uri);
@@ -184,9 +184,9 @@ public class TestProvider extends ContentProvider {
      * initialize DBHelper instance (thread safe)
      */
     private void initDBHelperInstance() {
-        synchronized (mLocker) {
-            if (mDBHelper == null) {
-                mDBHelper = new DBHelper(getContext());
+        synchronized (DB_LOCKER) {
+            if (sDBHelper == null) {
+                sDBHelper = new DBHelper(getContext());
             }
         }
     }
@@ -217,7 +217,7 @@ public class TestProvider extends ContentProvider {
      * @return rebuilt selection string
      */
     private String buildSelection(Uri uri, String selection) {
-        switch (sURIMatcher.match(uri)) {
+        switch (URI_MATCHER.match(uri)) {
             case CODE_USER:
             case CODE_NOTE:
                 return selection;   //no ID for adding
@@ -245,7 +245,7 @@ public class TestProvider extends ContentProvider {
      * @return selectionArgs with added ID
      */
     private String[] buildSelectionArgs(Uri uri, String[] selectionArgs) {
-        switch (sURIMatcher.match(uri)) {
+        switch (URI_MATCHER.match(uri)) {
             case CODE_USER:
             case CODE_NOTE:
                 return selectionArgs;
