@@ -35,12 +35,16 @@ import by.dzmitryslutskiy.hw.processing.NoteArrayProcessor;
 import by.dzmitryslutskiy.hw.processing.StringProcessor;
 import by.dzmitryslutskiy.hw.providers.Contracts.NoteContract;
 import by.dzmitryslutskiy.hw.ui.adapters.NoteAdapter;
+import by.dzmitryslutskiy.hw.utils.AuthUtils;
 
 
 public class MainActivity extends ActionBarActivity implements DataManager.Callback<Cursor> {
 
     public static final String URL = "https://dl.dropboxusercontent.com/u/16403954/test.json";
     private static final String LOG_TAG = "MainActivity";
+
+    public static final int REQUEST_CODE_VK_WEB_VIEW = 0;
+    public static final int REQUEST_CODE_VK_NATIVE = 1;
 
     private NoteAdapter mAdapter;
 
@@ -66,7 +70,7 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
         errorView = (TextView) findViewById(R.id.error);
 
         final HttpDataSource dataSource = HttpDataSource.get(MainActivity.this);
-        final NoteArrayProcessor processor = new NoteArrayProcessor();
+//        final NoteArrayProcessor processor = new NoteArrayProcessor();
 
         final HttpRequestParam param = HttpRequestParam.newInstance(HttpRequestParam.HttpType.GET, URL);
 
@@ -87,6 +91,63 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
                 new StringProcessor());
 
         initLoader();
+    }
+
+    public void onWebViewLoginClick(View view) {
+        Intent intent = new Intent(this, VkWebViewLoginActivity.class);
+        startActivityForResult(intent, REQUEST_CODE_VK_WEB_VIEW);
+    }
+
+
+    public void onBrowserLoginClick(View view) {
+
+        Intent intent = new Intent(this, VkNativeAppAuth.class);
+        startActivityForResult(intent, REQUEST_CODE_VK_NATIVE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK) {
+            Log.d(LOG_TAG, "data: " + data);
+            if (data != null) {
+                Bundle bundle = data.getExtras();
+
+                String result = "GetFrom: " + (requestCode == REQUEST_CODE_VK_WEB_VIEW ? "WebView " :
+                        requestCode == REQUEST_CODE_VK_NATIVE ? "Native VK app " : " unknown ") +
+                        "user id: " + bundle.get(AuthUtils.USER_ID) +
+                        " exp: " + bundle.get(AuthUtils.EXPIRES_IN) +
+                        " token: " + bundle.get(AuthUtils.ACCESS_TOKEN);
+
+//                AuthUtils.account(this, bundle.get(AuthUtils.USER_ID).toString(),
+//                        bundle.get(AuthUtils.ACCESS_TOKEN).toString());
+                Toast.makeText(this, result, Toast.LENGTH_SHORT).show();
+
+                Log.d(LOG_TAG, result);
+            }
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        Log.d(LOG_TAG, "new intent: " + intent);
+    }
+
+    public void onAccountManagerLoginClick(View view) {
+        Intent intent = new Intent(this, GoogleAuth.class);
+        startActivity(intent);
+    }
+
+    public void onOkLoginClick(View view) {
+        Intent intent = new Intent(this, OkLogin.class);
+        startActivity(intent);
+    }
+
+    public void onVkLoginClick(View view) {
+        Intent intent = new Intent(this, VkLogin.class);
+        startActivity(intent);
     }
 
     private class SelfCallback implements DataManager.Callback<String> {
@@ -196,7 +257,6 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
                 return true;
 
             case R.id.action_task:
-                Log.d(LOG_TAG, "do AsyncTask()");
 
                 ContentValues values = new ContentValues();
                 values.put(NoteContract.COLUMN_TITLE, "Title");

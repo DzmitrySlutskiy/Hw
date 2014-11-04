@@ -4,6 +4,9 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
+    <uses-permission android:name="android.permission.USE_CREDENTIALS"/>
 
     <application
         android:name=".CoreApplication"
@@ -18,6 +21,18 @@
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
+
+
+                <action android:name="android.intent.action.VIEW"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <data
+                    android:scheme="by.dzmitryslutskiy.hw"
+                    android:host="callback"/>
+
+
             </intent-filter>
         </activity>
         <activity
@@ -30,6 +45,55 @@
             android:label="@string/title_details_activity"
             android:parentActivityName=".ui.activities.MainActivity"
             />
+        <activity
+            android:name=".ui.activities.VkWebViewLoginActivity"
+            android:label="@string/login_web_view"
+            android:parentActivityName=".ui.activities.MainActivity"
+            />
+        <activity
+            android:name=".ui.activities.VkNativeAppAuth"
+            android:label="@string/login_web_view"
+            android:parentActivityName=".ui.activities.MainActivity"
+            />
+        <activity
+            android:name=".ui.activities.GoogleAuth"
+            android:label="@string/login_google"
+            android:parentActivityName=".ui.activities.MainActivity"
+            />
+        <activity
+            android:name=".ui.activities.OkLogin"
+            android:label="@string/login_ok"
+            android:parentActivityName=".ui.activities.MainActivity"
+            android:launchMode="singleTask">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <data
+                    android:host="ok1107517696"
+                    android:scheme="okauth"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ui.activities.VkLogin"
+            android:label="@string/login_ok"
+            android:parentActivityName=".ui.activities.MainActivity"
+            android:launchMode="singleTask">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <data
+                    android:host="vk4581205"
+                    android:scheme="vkauth"/>
+            </intent-filter>
+        </activity>
         <provider
             android:authorities="by.dzmitryslutskiy.hw.providers.testprovider"
             android:name="by.dzmitryslutskiy.hw.providers.TestProvider"
