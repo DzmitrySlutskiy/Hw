@@ -9,7 +9,9 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import by.dzmitryslutskiy.hw.providers.Contracts.NoteContract;
 import by.dzmitryslutskiy.hw.providers.Contracts.TestProviderContract;
@@ -23,34 +25,33 @@ import by.dzmitryslutskiy.hw.providers.Contracts.UserContract;
  */
 public class TestProvider extends ContentProvider {
 
-    public static final String LOG_TAG = TestProvider.class.getSimpleName();
+    private static final String LOG_TAG = TestProvider.class.getSimpleName();
 
-    private static final int CODE_NOTE = 10;
-    private static final int CODE_NOTE_ID = 20;
-    private static final int CODE_NOTE_ID_NEG = 21;
-
-    private static final int CODE_USER = 30;
-    private static final int CODE_USER_ID = 40;
-    private static final int CODE_USER_ID_NEG = 41;
+    private static final int CODE_TABLE = 1;
+    private static final int CODE_ID = 2;
+    private static final int CODE_ID_NEG = 3;
 
     private static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/";
     private static final String CONTENT_DIR_TYPE = "vnd.android.cursor.dir/";
 
-    private static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
+    private static final UriMatcher URI_MATCHER;
 
     private static final Object DB_LOCKER;
     private static DBHelper sDBHelper;
+    private static final List<String> implementedTables;
 
     static {
         DB_LOCKER = new Object();
-        //for NoteContract
-        URI_MATCHER.addURI(TestProviderContract.AUTHORITY, NoteContract.PATH, CODE_NOTE);
-        URI_MATCHER.addURI(TestProviderContract.AUTHORITY, NoteContract.PATH + "/#", CODE_NOTE_ID);
-        URI_MATCHER.addURI(TestProviderContract.AUTHORITY, NoteContract.PATH + "/*", CODE_NOTE_ID_NEG);
-        //for UserContract
-        URI_MATCHER.addURI(TestProviderContract.AUTHORITY, UserContract.PATH, CODE_USER);
-        URI_MATCHER.addURI(TestProviderContract.AUTHORITY, UserContract.PATH + "/#", CODE_USER_ID);
-        URI_MATCHER.addURI(TestProviderContract.AUTHORITY, UserContract.PATH + "/*", CODE_USER_ID_NEG);
+
+        URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
+
+        URI_MATCHER.addURI(TestProviderContract.AUTHORITY, "*", CODE_TABLE);
+        URI_MATCHER.addURI(TestProviderContract.AUTHORITY, "*/#", CODE_ID);
+        URI_MATCHER.addURI(TestProviderContract.AUTHORITY, "*/*", CODE_ID_NEG);
+
+        implementedTables = new ArrayList<String>();
+        implementedTables.add(NoteContract.PATH);
+        implementedTables.add(UserContract.PATH);
     }
 
 
@@ -63,13 +64,16 @@ public class TestProvider extends ContentProvider {
     }
 
     @Override
-    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs,
+                        String sortOrder) {
 
+        int matchCode = matchUri(uri);
+        String tableName = getTableNameByUriCode(matchCode, uri);
         try {
-            Cursor cursor = sDBHelper.query(getTableNameByUri(uri),
+            Cursor cursor = sDBHelper.query(tableName,
                     projection,
-                    buildSelection(uri, selection),
-                    buildSelectionArgs(uri, selectionArgs),
+                    buildSelection(matchCode, tableName, selection),
+                    buildSelectionArgs(matchCode, uri, selectionArgs),
                     null, null, sortOrder);
 
             cursor.setNotificationUri(getContext().getContentResolver(), uri);
@@ -85,29 +89,19 @@ public class TestProvider extends ContentProvider {
 
     @Override
     public String getType(Uri uri) {
-        switch (URI_MATCHER.match(uri)) {
-            case CODE_NOTE:
-                return CONTENT_DIR_TYPE + NoteContract.PATH;
+        int matchCode = matchUri(uri);
+        String tableName = getTableNameByUriCode(matchCode, uri);
 
-            case CODE_USER:
-                return CONTENT_DIR_TYPE + UserContract.PATH;
-
-            case CODE_NOTE_ID:
-            case CODE_NOTE_ID_NEG:
-                return CONTENT_ITEM_TYPE + NoteContract.PATH;
-
-            case CODE_USER_ID:
-            case CODE_USER_ID_NEG:
-                return CONTENT_ITEM_TYPE + UserContract.PATH;
-
-            default:
-                return null;
+        if (matchCode == CODE_TABLE) {
+            return CONTENT_DIR_TYPE + tableName;
+        } else {
+            return CONTENT_ITEM_TYPE + tableName;
         }
     }
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        String tableName = getTableNameByUri(uri);
+        String tableName = getTableNameByUriCode(matchUri(uri), uri);
 
         long id = sDBHelper.insert(tableName, null, values);
         getContext().getContentResolver().notifyChange(uri, null);
@@ -117,23 +111,28 @@ public class TestProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
+        int matchCode = matchUri(uri);
+        String tableName = getTableNameByUriCode(matchCode, uri);
 
-        int rowsDeleted = sDBHelper.delete(getTableNameByUri(uri),
-                buildSelection(uri, selection),
-                buildSelectionArgs(uri, selectionArgs));
+        int rowsDeleted = sDBHelper.delete(tableName,
+                buildSelection(matchCode, tableName, selection),
+                buildSelectionArgs(matchCode, uri, selectionArgs));
 
         getContext().getContentResolver().notifyChange(uri, null);
 
         return rowsDeleted;
     }
 
+
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+        int matchedUriCode = matchUri(uri);
+        String tableName = getTableNameByUriCode(matchedUriCode, uri);
 
-        int rowsUpdated = (int) sDBHelper.update(getTableNameByUri(uri),
+        int rowsUpdated = (int) sDBHelper.update(tableName,
                 values,
-                buildSelection(uri, selection),
-                buildSelectionArgs(uri, selectionArgs));
+                buildSelection(matchedUriCode, tableName, selection),
+                buildSelectionArgs(matchedUriCode, uri, selectionArgs));
 
         getContext().getContentResolver().notifyChange(uri, null);
 
@@ -143,41 +142,30 @@ public class TestProvider extends ContentProvider {
     @Override
     public int bulkInsert(Uri uri, @NonNull ContentValues[] values) {
 
-        sDBHelper.insert(getTableNameByUri(uri), null, values);
+        sDBHelper.insert(getTableNameByUriCode(matchUri(uri), uri), null, values);
         getContext().getContentResolver().notifyChange(uri, null);
 
         return values.length;
     }
 
-    private String getTableNameByUri(Uri uri) {
-        int matchCode = URI_MATCHER.match(uri);
+    private String getTableNameByUriCode(int matchCode, Uri uri) {
+        String tableName;
+        if (matchCode == CODE_TABLE) {
+            tableName = uri.getLastPathSegment();
+        } else {             //ID used in URI
+            List<String> listSegments = uri.getPathSegments();
 
-        if (matchCode == UriMatcher.NO_MATCH) {
-            throw new IllegalArgumentException("Unknown URI: " + uri);
-        } else {
-            return getTableNameByUri(matchCode);
+            //uri=content://AUTHORITY/Note/1
+            //in list item[0] = Note, item[1] = 1, size=2, -2 for get TableName segment
+            tableName = listSegments.get(listSegments.size() - 2);
         }
-    }
 
-    private String getTableNameByUri(int matchCode) {
-        switch (matchCode) {
-
-            case CODE_NOTE_ID_NEG:
-            case CODE_NOTE_ID:
-            case CODE_NOTE:
-                return NoteContract.PATH;
-
-            case CODE_USER:
-            case CODE_USER_ID:
-            case CODE_USER_ID_NEG:
-                return UserContract.PATH;
-
-//            case UriMatcher.NO_MATCH:
-//                throw new IllegalArgumentException("Unknown URI");
-
-            default:
-                throw new IllegalArgumentException("URI code not implemented: " + matchCode);
+        //необязательная проверка, но тогда будет Exception от SQLite при выполнении запроса
+        if (! implementedTables.contains(tableName)) {
+            throw new IllegalArgumentException("Table \"" + tableName + "\" not exists");
         }
+
+        return tableName;
     }
 
     /**
@@ -192,73 +180,47 @@ public class TestProvider extends ContentProvider {
     }
 
     /**
-     * concatenate string selection and " AND table.idField = ?"
+     * if current uri use ID - add this ID to selection as COLUMN_ID = ?
+     * need add this ID as selectionArgs
      *
-     * @param selection selection
-     * @param table     table name
-     * @param idField   field ID name (default must be "_id")
-     * @return selection with "table.idField = ?"
+     * @param matchedUriCode uri code
+     * @param tableName      table name
+     * @param selection      default selection
+     * @return rebuilt selection string
      */
-    private String buildSelection(String selection, String table, String idField) {
+    private String buildSelection(int matchedUriCode, String tableName, String selection) {
+
+        if (matchedUriCode == CODE_TABLE) {
+            return selection;
+        }
+
         if (selection == null) {
-            selection = table + "." + idField + " = ?";
+            selection = tableName + "." + TestProviderContract.COLUMN_ID_DEFAULT + " = ?";
         } else {
-            selection += " AND " + table + "." + idField + " = ?";
+            selection += " AND " + tableName + "." + TestProviderContract.COLUMN_ID_DEFAULT + " = ?";
         }
         return selection;
     }
 
     /**
-     * if current uri use ID - add this ID to selection as COLUMN_ID = ?
-     * need add this ID as selectionArgs
-     *
-     * @param uri       uri
-     * @param selection default selection
-     * @return rebuilt selection string
-     */
-    private String buildSelection(Uri uri, String selection) {
-        switch (URI_MATCHER.match(uri)) {
-            case CODE_USER:
-            case CODE_NOTE:
-                return selection;   //no ID for adding
-
-            case CODE_USER_ID:
-            case CODE_USER_ID_NEG:  //need add ID for selection condition
-                return buildSelection(selection, UserContract.PATH,
-                        TestProviderContract.COLUMN_ID_DEFAULT);
-
-            case CODE_NOTE_ID:
-            case CODE_NOTE_ID_NEG:
-                return buildSelection(selection, NoteContract.PATH,
-                        TestProviderContract.COLUMN_ID_DEFAULT);
-
-            default:
-                throw new IllegalArgumentException("Unknown URI: " + uri);
-        }
-    }
-
-    /**
      * if current uri use ID - add this id to selectionArgs
      *
-     * @param uri           uri
-     * @param selectionArgs selectionArgs
+     * @param matchedUriCode uri code
+     * @param selectionArgs  selectionArgs
      * @return selectionArgs with added ID
      */
-    private String[] buildSelectionArgs(Uri uri, String[] selectionArgs) {
-        switch (URI_MATCHER.match(uri)) {
-            case CODE_USER:
-            case CODE_NOTE:
-                return selectionArgs;
-
-            default:        //if ID used
-                if (selectionArgs != null) {
-                    selectionArgs = Arrays.copyOf(selectionArgs, selectionArgs.length + 1);
-                } else {
-                    selectionArgs = new String[1];
-                }
-                selectionArgs[selectionArgs.length - 1] = uri.getLastPathSegment();
-
+    private String[] buildSelectionArgs(int matchedUriCode, Uri uri, String[] selectionArgs) {
+        if (matchedUriCode == CODE_TABLE) {
+            return selectionArgs;
         }
+
+        if (selectionArgs != null) {
+            selectionArgs = Arrays.copyOf(selectionArgs, selectionArgs.length + 1);
+        } else {
+            selectionArgs = new String[1];
+        }
+        selectionArgs[selectionArgs.length - 1] = uri.getLastPathSegment();
+
         return selectionArgs;
     }
 
@@ -275,5 +237,21 @@ public class TestProvider extends ContentProvider {
         matrixCursor.addRow(new String[]{exception.getMessage()});
 
         return matrixCursor;
+    }
+
+    /**
+     * Match uri or throw IllegalArgumentException if URI unknown
+     *
+     * @param uri uri for match
+     * @return matched code
+     */
+    private int matchUri(Uri uri) {
+        int matchCode = URI_MATCHER.match(uri);
+
+        if (matchCode == UriMatcher.NO_MATCH) {
+            throw new IllegalArgumentException("Unknown URI: " + uri);
+        } else {
+            return matchCode;
+        }
     }
 }

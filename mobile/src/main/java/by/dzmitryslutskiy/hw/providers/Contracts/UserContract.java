@@ -11,12 +11,11 @@ import java.util.HashMap;
  * 28.10.2014
  * Created by Dzmitry Slutskiy.
  */
-public class UserContract {
+public class UserContract extends BaseContract{
 
     public static final String PATH = "User";
 
     public static final String COLUMN_NAME = "name";
-    public static final String COLUMN_ID = TestProviderContract.COLUMN_ID_DEFAULT;
 
     public static final Uri CONTENT_URI =
             Uri.withAppendedPath(TestProviderContract.AUTHORITY_URI, PATH);

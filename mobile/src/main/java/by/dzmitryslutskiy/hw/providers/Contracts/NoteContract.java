@@ -11,13 +11,12 @@ import java.util.HashMap;
  * 28.10.2014
  * Created by Dzmitry Slutskiy.
  */
-public class NoteContract {
+public class NoteContract extends BaseContract{
 
     public static final String PATH = "Note";
 
     public static final String COLUMN_TITLE = "title";
     public static final String COLUMN_CONTENT = "content";
-    public static final String COLUMN_ID = TestProviderContract.COLUMN_ID_DEFAULT;
 
     public static final Uri CONTENT_URI =
             Uri.withAppendedPath(TestProviderContract.AUTHORITY_URI, PATH);
