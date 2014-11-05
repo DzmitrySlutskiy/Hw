@@ -16,7 +16,7 @@ import by.dzmitryslutskiy.hw.R;
  */
 public class VkLogin extends ActionBarActivity {
 
-    public static final String URL = "https://oauth.vk.com/authorize?client_id=4581205&scope=offline,wall,photos,status&redirect_uri=vkauth://vk4581205&display=touch&response_type=token";
+    public static final String URL = "https://oauth.vk.com/authorize?client_id=4581205&scope=offline,wall,photos,status&redirect_uri=https://oauth.vk.com/blank.html&display=touch&response_type=token";
     public VkLogin() {/*   code    */}
 
     @Override
@@ -38,5 +38,6 @@ public class VkLogin extends ActionBarActivity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        //intent.getData() - here
     }
 }

@@ -90,8 +90,9 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
 
                 <data
-                    android:host="vk4581205"
-                    android:scheme="vkauth"/>
+                    android:host="oauth.vk.com"
+                    android:scheme="https"
+                    android:pathPattern="/blank.*"/>
             </intent-filter>
         </activity>
         <provider

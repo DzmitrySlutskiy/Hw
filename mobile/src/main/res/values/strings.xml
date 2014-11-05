@@ -24,5 +24,6 @@
     <string name="login_google">login Account manager</string>
     <string name="login_ok">Ok login</string>
     <string name="login_vk">login VK browser</string>
+    <string name="login_vk_browser">VK login via browser</string>
 
 </resources>
