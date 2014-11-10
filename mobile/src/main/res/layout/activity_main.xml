@@ -39,8 +39,16 @@
         android:layout_height="48dp"
         android:onClick="onVkLoginClick"/>
 
-    <android.support.v4.widget.SwipeRefreshLayout
+    <Button
         android:layout_below="@id/login_vk"
+        android:id="@+id/rotate_activity"
+        android:layout_width="match_parent"
+        android:text="@string/rotate_activity_caption"
+        android:layout_height="48dp"
+        android:onClick="onRotateActivityClick"/>
+
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:layout_below="@id/rotate_activity"
         android:id="@+id/swipe_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent">

@@ -31,7 +31,6 @@ import by.dzmitryslutskiy.hw.bo.Note;
 import by.dzmitryslutskiy.hw.data.DataManager;
 import by.dzmitryslutskiy.hw.data.HttpDataSource;
 import by.dzmitryslutskiy.hw.data.HttpRequestParam;
-import by.dzmitryslutskiy.hw.processing.NoteArrayProcessor;
 import by.dzmitryslutskiy.hw.processing.StringProcessor;
 import by.dzmitryslutskiy.hw.providers.Contracts.NoteContract;
 import by.dzmitryslutskiy.hw.ui.adapters.NoteAdapter;
@@ -122,7 +121,7 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
 
 //                AuthUtils.account(this, bundle.get(AuthUtils.USER_ID).toString(),
 //                        bundle.get(AuthUtils.ACCESS_TOKEN).toString());
-                Toast.makeText(this, result, Toast.LENGTH_SHORT).show();
+//                Toast.makeText(this, result, Toast.LENGTH_SHORT).show();
 
                 Log.d(LOG_TAG, result);
             }
@@ -150,6 +149,10 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
         startActivity(intent);
     }
 
+    public void onRotateActivityClick(View view) {
+        startActivity(new Intent(this, RotateActivity.class));
+    }
+
     private class SelfCallback implements DataManager.Callback<String> {
 
         @Override
@@ -160,8 +163,8 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
         @Override
         public void onDone(String data) {
             Log.d(LOG_TAG, "onDone: " + data);
-            Toast.makeText(getApplicationContext(), "onDone loader in DataManager. data:" + data,
-                    Toast.LENGTH_SHORT).show();
+//            Toast.makeText(getApplicationContext(), "onDone loader in DataManager. data:" + data,
+//                    Toast.LENGTH_SHORT).show();
         }
 
         @Override
@@ -311,7 +314,7 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor s) {
             Log.d(LOG_TAG, "onLoadFinished:" + s);
-            Toast.makeText(getApplicationContext(), "onLoadFinish", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(getApplicationContext(), "onLoadFinish", Toast.LENGTH_SHORT).show();
             onDone(s);
         }
 

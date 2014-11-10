@@ -95,6 +95,11 @@
                     android:pathPattern="/blank.*"/>
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.activities.RotateActivity"
+            android:label="@string/rotate_activity_caption"
+            android:parentActivityName=".ui.activities.MainActivity"
+            />
         <provider
             android:authorities="by.dzmitryslutskiy.hw.providers.testprovider"
             android:name="by.dzmitryslutskiy.hw.providers.TestProvider"

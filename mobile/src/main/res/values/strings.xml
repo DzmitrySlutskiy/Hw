@@ -25,5 +25,7 @@
     <string name="login_ok">Ok login</string>
     <string name="login_vk">login VK browser</string>
     <string name="login_vk_browser">VK login via browser</string>
+    <string name="rotate_activity_caption">2 fragments in Activity with rotate</string>
+    <string name="no_selected_item">No selected items</string>
 
 </resources>

@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.widget.Toast;
 
 /**
  * Classname
@@ -58,7 +57,7 @@ public class AuthUtils {
                 resultIntent.putExtra(AuthUtils.EXPIRES_IN, expiresIn);
 
                 activity.setResult(Activity.RESULT_OK, resultIntent);
-                Toast.makeText(activity, "UserID: " + userId, Toast.LENGTH_SHORT).show();
+//                Toast.makeText(activity, "UserID: " + userId, Toast.LENGTH_SHORT).show();
                 return true;
             } else {
                 //TODO check access denied/finish
@@ -80,7 +79,7 @@ public class AuthUtils {
         Account[] accounts = manager.getAccountsByType(ACCOUNT_TYPE);
         if (accounts.length == 0) {
             Account vkAccount = new Account(userId, ACCOUNT_TYPE);
-            manager.addAccountExplicitly(vkAccount,null,null);
+            manager.addAccountExplicitly(vkAccount, null, null);
         }
 
 
