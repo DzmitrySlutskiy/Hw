@@ -22,7 +22,7 @@ import by.dzmitryslutskiy.hw.utils.FragmentUtils;
 public class RotateActivity extends ActionBarActivity implements MainFragment.onNoteSelectedListener,
         IdFragment.onIdClickListener {
 
-    public static final String SELECTED_NOTE_ID = "mSelectedNoteId";
+    private static final String SELECTED_NOTE_ID = "mSelectedNoteId";
     private int mSelectedNoteId;
 
     public RotateActivity() {/*   code    */}
@@ -43,39 +43,27 @@ public class RotateActivity extends ActionBarActivity implements MainFragment.on
 
             //if first run initialize fragment and set in position R.id.fragment_main
             if (manager.findFragmentById(R.id.fragment_main) == null) {
-                addFragmentToManager(R.id.fragment_main, new MainFragment(), MainFragment.TAG);
+                addMainFragmentToContainer(R.id.fragment_main);
             }
-
-            DetailFragment detailFragment = (DetailFragment) manager.findFragmentById(R.id.fragment_detail);
-            if (detailFragment == null) {
-                detailFragment = initDetailFragment(mSelectedNoteId);
-                //replace or add fragment
-                addFragmentToManager(R.id.fragment_detail, detailFragment, DetailFragment.TAG);
-            } else {
-                detailFragment.updateNoteId(mSelectedNoteId);
-            }
+            updateDetailFragment(mSelectedNoteId,
+                    (DetailFragment) manager.findFragmentById(R.id.fragment_detail),
+                    R.id.fragment_detail);
         } else {
             //if first run initialize fragment and set in position R.id.fragment_main
             if (FragmentUtils.findFragmentByIdAndTag(manager,
                     R.id.fragment_container, MainFragment.TAG) == null) {
-                addFragmentToManager(R.id.fragment_container, new MainFragment(), MainFragment.TAG);
+                addMainFragmentToContainer(R.id.fragment_container);
             }
         }
     }
 
-    private void addFragmentToManager(int id, Fragment fragment, String tag) {
-        addFragmentToManager(id, fragment, tag, false);
+    private void addMainFragmentToContainer(int id) {
+        FragmentUtils.addFragment(getSupportFragmentManager(), id,
+                new MainFragment(), MainFragment.TAG);
     }
 
-    private void addFragmentToManager(int id, Fragment fragment, String tag, boolean addToBackStack) {
-        FragmentManager manager = getSupportFragmentManager();
-        FragmentTransaction transaction = manager.beginTransaction();
-
-        transaction.add(id, fragment, tag);
-        if (addToBackStack) {
-            transaction.addToBackStack(tag);
-        }
-        transaction.commit();
+    private void addFragmentToManager(int id, Fragment fragment, String tag) {
+        FragmentUtils.addFragment(getSupportFragmentManager(), id, fragment, tag);
     }
 
     @Override
@@ -99,34 +87,17 @@ public class RotateActivity extends ActionBarActivity implements MainFragment.on
 
         if (findViewById(R.id.fragment_detail) != null) {
             //here dual pane mode
-
-            DetailFragment detailFragment = (DetailFragment) manager.findFragmentById(R.id.fragment_detail);
-            if (detailFragment == null) {
-                detailFragment = initDetailFragment(noteId);
-
-                //add fragment
-                addFragmentToManager(R.id.fragment_detail, detailFragment, DetailFragment.TAG);
-            } else {
-                detailFragment.updateNoteId(noteId);
-            }
+            updateDetailFragment(noteId,
+                    (DetailFragment) manager.findFragmentById(R.id.fragment_detail),
+                    R.id.fragment_detail);
         } else {
             //here single pane mode
             MainFragment mainFragment = (MainFragment) FragmentUtils.
-                    findFragmentByIdAndTag(getSupportFragmentManager(),
-                            R.id.fragment_container, MainFragment.TAG);
+                    findFragmentByIdAndTag(manager, R.id.fragment_container, MainFragment.TAG);
 
-            DetailFragment detailFragment = (DetailFragment) FragmentUtils.
-                    findFragmentByIdAndTag(getSupportFragmentManager(),
-                            R.id.fragment_container, DetailFragment.TAG);
-
-            if (detailFragment == null) {
-                detailFragment = initDetailFragment(noteId);
-
-                //add fragment
-                addFragmentToManager(R.id.fragment_container, detailFragment, DetailFragment.TAG);
-            } else {
-                detailFragment.updateNoteId(noteId);
-            }
+            DetailFragment detailFragment = updateDetailFragment(noteId,
+                    (DetailFragment) FragmentUtils.findFragmentByIdAndTag(manager,
+                            R.id.fragment_container, DetailFragment.TAG), R.id.fragment_container);
 
             FragmentTransaction transaction = manager.beginTransaction();
             if (mainFragment != null) {
@@ -136,6 +107,18 @@ public class RotateActivity extends ActionBarActivity implements MainFragment.on
             transaction.addToBackStack(null);
             transaction.commit();
         }
+    }
+
+    private DetailFragment updateDetailFragment(int noteId, DetailFragment detailFragment, int id) {
+        if (detailFragment == null) {
+            detailFragment = initDetailFragment(noteId);
+
+            //add fragment
+            addFragmentToManager(id, detailFragment, DetailFragment.TAG);
+        } else {
+            detailFragment.updateNoteId(noteId);
+        }
+        return detailFragment;
     }
 
     @Override

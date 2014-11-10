@@ -4,7 +4,6 @@ package by.dzmitryslutskiy.hw.ui.fragments;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
@@ -15,6 +14,7 @@ import android.widget.TextView;
 import by.dzmitryslutskiy.hw.R;
 import by.dzmitryslutskiy.hw.asyncwork.NoteDetailLoader;
 import by.dzmitryslutskiy.hw.providers.Contracts.NoteContract;
+import by.dzmitryslutskiy.hw.utils.FragmentUtils;
 
 /**
  * DetailFragment
@@ -55,10 +55,17 @@ public class DetailFragment extends Fragment {
         mTextViewContent = (TextView) view.findViewById(android.R.id.text1);
 
         if (savedInstanceState == null) {
-            FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-            IdFragment fragment = new IdFragment();
-            transaction.add(R.id.child_fragment, fragment, IdFragment.TAG);
-            transaction.commit();
+            IdFragment childFragment = new IdFragment();
+            //add listener to fragment like here or implements interface like inner class
+            //or in self fragment 
+//            childFragment.setOnIdClickListener(new IdFragment.onIdClickListener() {
+//                @Override
+//                public void onIdClick(int noteId) {
+//
+//                }
+//            });
+            FragmentUtils.addFragment(getChildFragmentManager(),
+                    R.id.child_fragment, childFragment, IdFragment.TAG);
         }
 
         return view;
@@ -92,15 +99,12 @@ public class DetailFragment extends Fragment {
         public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
             if (cursor != null) {
                 cursor.moveToFirst();
-                String content;
                 if (cursor.getCount() > 0) {
-                    content = "Content for selected item: " +
-                            cursor.getString(cursor.getColumnIndex(NoteContract.COLUMN_CONTENT));
+                    mTextViewContent.setText("Content for selected item: " +
+                            cursor.getString(cursor.getColumnIndex(NoteContract.COLUMN_CONTENT)));
                 } else {
-                    content = getActivity().getString(R.string.no_selected_item);
+                    mTextViewContent.setText(getActivity().getString(R.string.no_selected_item));
                 }
-                mTextViewContent.setText(content);
-
                 updateChildFragment();
             }
         }
@@ -109,7 +113,6 @@ public class DetailFragment extends Fragment {
         public void onLoaderReset(Loader<Cursor> loader) {
             mTextViewContent.setText(getActivity().getString(R.string.no_selected_item));
         }
-
     }
 
     private void updateChildFragment() {
@@ -142,6 +145,7 @@ public class DetailFragment extends Fragment {
     public static Bundle prepareBundle(int id) {
         Bundle bundle = new Bundle();
         bundle.putInt(ARG_NOTE_ID, id);
+
         return bundle;
     }
 }

@@ -25,6 +25,7 @@ import by.dzmitryslutskiy.hw.ui.adapters.NoteBaseAdapter;
  */
 public class MainFragment extends ListFragment {
     public static final String TAG = MainFragment.class.getSimpleName();
+    private static final int MAIN_FRAGMENT_LOADER_ID = 0;
 
     private CursorLoaderCallback mCursorCallback;
     private onNoteSelectedListener mListener;
@@ -89,7 +90,7 @@ public class MainFragment extends ListFragment {
     }
 
     private void initLoader() {
-        getLoaderManager().initLoader(0, null, getCursorCallback());
+        getLoaderManager().initLoader(MAIN_FRAGMENT_LOADER_ID, null, getCursorCallback());
     }
 
     public interface onNoteSelectedListener {
