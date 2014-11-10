@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Build;
 import android.util.Log;
 
 import by.dzmitryslutskiy.hw.providers.Contracts.NoteContract;
@@ -65,13 +66,13 @@ class DBHelper extends SQLiteOpenHelper {
      */
     public long update(String table, ContentValues values, String whereClause, String[] whereArgs) {
         SQLiteDatabase writableDatabase = getWritableDatabase();
-        writableDatabase.beginTransaction();
+        beginTransaction(writableDatabase);
         try {
             long result = writableDatabase.update(table, values, whereClause, whereArgs);
-            writableDatabase.setTransactionSuccessful();
+            setTransactionSuccessfull(writableDatabase);
             return result;
         } finally {
-            writableDatabase.endTransaction();
+            endTransaction(writableDatabase);
         }
     }
 
@@ -113,7 +114,7 @@ class DBHelper extends SQLiteOpenHelper {
         SQLiteDatabase writableDatabase = getWritableDatabase();
         long result = - 1;
         long rowsInserted = 0;
-        writableDatabase.beginTransaction();
+        beginTransaction(writableDatabase);
         try {
             for (ContentValues value : values) {     //more than one used for bulkInsert
                 result = writableDatabase.insert(table, nullColumnHack, value);
@@ -122,10 +123,37 @@ class DBHelper extends SQLiteOpenHelper {
                     rowsInserted++;
                 }
             }
-            writableDatabase.setTransactionSuccessful();
+            setTransactionSuccessfull(writableDatabase);
             return (values.length > 1 ? rowsInserted : result);
         } finally {
+            endTransaction(writableDatabase);
+        }
+    }
+
+    private void beginTransaction(SQLiteDatabase writableDatabase) {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            writableDatabase.beginTransactionNonExclusive();
+        } else {
+            //http://www.enterra.ru/blog/android_issues_with_sqlite/
+            writableDatabase.execSQL("begin immediate transaction");
+        }
+    }
+
+    private void setTransactionSuccessfull(SQLiteDatabase writableDatabase) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            writableDatabase.setTransactionSuccessful();
+        }
+        //not need commit transaction (set success) because do it in endTransaction
+        //2 step transaction: begin and commit/rollback
+        //docs: https://www.sqlite.org/lang_transaction.html
+    }
+
+    private void endTransaction(SQLiteDatabase writableDatabase) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             writableDatabase.endTransaction();
+        } else {
+            writableDatabase.execSQL("commit transaction");
         }
     }
 }
