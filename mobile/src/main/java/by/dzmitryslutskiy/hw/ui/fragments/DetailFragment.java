@@ -138,4 +138,10 @@ public class DetailFragment extends Fragment {
         updateChildFragment();
         initLoader();
     }
+
+    public static Bundle prepareBundle(int id) {
+        Bundle bundle = new Bundle();
+        bundle.putInt(ARG_NOTE_ID, id);
+        return bundle;
+    }
 }

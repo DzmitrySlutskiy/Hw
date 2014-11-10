@@ -5,10 +5,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.widget.Toast;
-
-import java.util.List;
 
 import by.dzmitryslutskiy.hw.R;
 import by.dzmitryslutskiy.hw.ui.fragments.DetailFragment;
@@ -44,47 +41,25 @@ public class RotateActivity extends ActionBarActivity implements MainFragment.on
         if (findViewById(R.id.fragment_detail) != null) {
             //here dual pane mode init detailFragment
 
-            MainFragment mainFragment = (MainFragment) manager.findFragmentById(R.id.fragment_main);
             //if first run initialize fragment and set in position R.id.fragment_main
-            if (mainFragment == null) {
-                mainFragment = new MainFragment();
-
-                //replace or add fragment
-                addFragmentToManager(R.id.fragment_main, mainFragment, MainFragment.TAG);
+            if (manager.findFragmentById(R.id.fragment_main) == null) {
+                addFragmentToManager(R.id.fragment_main, new MainFragment(), MainFragment.TAG);
             }
 
             DetailFragment detailFragment = (DetailFragment) manager.findFragmentById(R.id.fragment_detail);
             if (detailFragment == null) {
-                detailFragment = initDetailFragment(savedInstanceState != null
-                        ? savedInstanceState.getInt(SELECTED_NOTE_ID)
-                        : - 1);
+                detailFragment = initDetailFragment(mSelectedNoteId);
                 //replace or add fragment
                 addFragmentToManager(R.id.fragment_detail, detailFragment, DetailFragment.TAG);
             } else {
                 detailFragment.updateNoteId(mSelectedNoteId);
             }
         } else {
-            MainFragment mainFragment = (MainFragment) FragmentUtils.
-                    findFragmentByIdAndTag(getSupportFragmentManager(),
-                            R.id.fragment_container, MainFragment.TAG);
             //if first run initialize fragment and set in position R.id.fragment_main
-            if (mainFragment == null) {
-                mainFragment = new MainFragment();
-
-                //replace or add fragment
-                addFragmentToManager(R.id.fragment_container, mainFragment, MainFragment.TAG);
+            if (FragmentUtils.findFragmentByIdAndTag(manager,
+                    R.id.fragment_container, MainFragment.TAG) == null) {
+                addFragmentToManager(R.id.fragment_container, new MainFragment(), MainFragment.TAG);
             }
-        }
-        logFragmentsSize();
-    }
-
-
-    private void logFragmentsSize() {
-        List fragmentsList = getSupportFragmentManager().getFragments();
-        if (fragmentsList != null) {
-            Log.d("RotateActivity", "fragments: " + fragmentsList.size());
-        } else {
-            Log.d("RotateActivity", "fragments: null");
         }
     }
 
@@ -97,28 +72,23 @@ public class RotateActivity extends ActionBarActivity implements MainFragment.on
         FragmentTransaction transaction = manager.beginTransaction();
 
         transaction.add(id, fragment, tag);
-
         if (addToBackStack) {
             transaction.addToBackStack(tag);
         }
         transaction.commit();
-        logFragmentsSize();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        logFragmentsSize();
+
         outState.putInt(SELECTED_NOTE_ID, mSelectedNoteId);
     }
 
     private DetailFragment initDetailFragment(int noteId) {
         DetailFragment fragment = new DetailFragment();
-        Bundle bundle = new Bundle();
-        bundle.putInt(DetailFragment.ARG_NOTE_ID, noteId);
-        fragment.setArguments(bundle);
+        fragment.setArguments(DetailFragment.prepareBundle(noteId));
 
-        logFragmentsSize();
         return fragment;
     }
 
@@ -166,7 +136,6 @@ public class RotateActivity extends ActionBarActivity implements MainFragment.on
             transaction.addToBackStack(null);
             transaction.commit();
         }
-        logFragmentsSize();
     }
 
     @Override

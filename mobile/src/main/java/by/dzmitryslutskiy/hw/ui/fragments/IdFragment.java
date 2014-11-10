@@ -50,7 +50,9 @@ public class IdFragment extends Fragment implements TextView.OnClickListener {
 
     public void updateNoteId(int newId) {
         mNoteId = newId;
-        mTextViewContent.setText(mNoteId > 0 ? "ID: " + mNoteId : "ID: no");
+        if (mTextViewContent != null) {
+            mTextViewContent.setText(mNoteId > 0 ? "ID: " + mNoteId : "ID: no");
+        }
     }
 
     private int getNoteIdFromArgs() {
@@ -68,7 +70,7 @@ public class IdFragment extends Fragment implements TextView.OnClickListener {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
 
-        if (activity instanceof onIdClickListener) {
+        if ((mListener == null) && (activity instanceof onIdClickListener)) {
             mListener = (onIdClickListener) activity;
         }
     }
