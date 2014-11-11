@@ -100,6 +100,11 @@
             android:label="@string/rotate_activity_caption"
             android:parentActivityName=".ui.activities.MainActivity"
             />
+        <activity
+            android:name=".ui.activities.StackActivity"
+            android:label="@string/stack_activity_caption"
+            android:parentActivityName=".ui.activities.MainActivity"
+            />
         <provider
             android:authorities="by.dzmitryslutskiy.hw.providers.testprovider"
             android:name="by.dzmitryslutskiy.hw.providers.TestProvider"

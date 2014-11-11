@@ -46,9 +46,16 @@
         android:text="@string/rotate_activity_caption"
         android:layout_height="48dp"
         android:onClick="onRotateActivityClick"/>
+    <Button
+        android:layout_below="@id/rotate_activity"
+        android:id="@+id/stack_activity"
+        android:layout_width="match_parent"
+        android:text="@string/stack_activity_caption"
+        android:layout_height="48dp"
+        android:onClick="onStackActivityClick"/>
 
     <android.support.v4.widget.SwipeRefreshLayout
-        android:layout_below="@id/rotate_activity"
+        android:layout_below="@id/stack_activity"
         android:id="@+id/swipe_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent">

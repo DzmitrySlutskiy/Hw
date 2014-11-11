@@ -27,5 +27,7 @@
     <string name="login_vk_browser">VK login via browser</string>
     <string name="rotate_activity_caption">2 fragments in Activity with rotate</string>
     <string name="no_selected_item">No selected items</string>
+    <string name="stack_activity_caption">BackStack sample</string>
+    <string name="add_fragment">add fragment</string>
 
 </resources>

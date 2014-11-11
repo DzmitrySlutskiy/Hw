@@ -153,6 +153,10 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
         startActivity(new Intent(this, RotateActivity.class));
     }
 
+    public void onStackActivityClick(View view) {
+        startActivity(new Intent(this, StackActivity.class));
+    }
+
     private class SelfCallback implements DataManager.Callback<String> {
 
         @Override
