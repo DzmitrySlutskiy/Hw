@@ -57,7 +57,7 @@ public class DetailFragment extends Fragment {
         if (savedInstanceState == null) {
             IdFragment childFragment = new IdFragment();
             //add listener to fragment like here or implements interface like inner class
-            //or in self fragment 
+            //or in self fragment
 //            childFragment.setOnIdClickListener(new IdFragment.onIdClickListener() {
 //                @Override
 //                public void onIdClick(int noteId) {
