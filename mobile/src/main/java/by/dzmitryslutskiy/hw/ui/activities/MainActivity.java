@@ -157,6 +157,10 @@ public class MainActivity extends ActionBarActivity implements DataManager.Callb
         startActivity(new Intent(this, StackActivity.class));
     }
 
+    public void onPagerActivityClick(View view) {
+        startActivity(new Intent(this, PagerActivity.class));
+    }
+
     private class SelfCallback implements DataManager.Callback<String> {
 
         @Override

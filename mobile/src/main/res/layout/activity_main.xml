@@ -10,6 +10,7 @@
         android:layout_height="48dp"
         android:text="@string/login_web_view"
         android:onClick="onWebViewLoginClick"/>
+
     <Button
         android:layout_below="@id/login_web_view"
         android:id="@+id/login_vk_client"
@@ -17,6 +18,7 @@
         android:layout_height="48dp"
         android:text="@string/login_vk_app"
         android:onClick="onBrowserLoginClick"/>
+
     <Button
         android:layout_below="@id/login_vk_client"
         android:id="@+id/login_account_manager"
@@ -24,6 +26,7 @@
         android:text="@string/login_google"
         android:layout_height="48dp"
         android:onClick="onAccountManagerLoginClick"/>
+
     <Button
         android:layout_below="@id/login_account_manager"
         android:id="@+id/login_ok"
@@ -31,6 +34,7 @@
         android:text="@string/login_ok"
         android:layout_height="48dp"
         android:onClick="onOkLoginClick"/>
+
     <Button
         android:layout_below="@id/login_ok"
         android:id="@+id/login_vk"
@@ -46,6 +50,7 @@
         android:text="@string/rotate_activity_caption"
         android:layout_height="48dp"
         android:onClick="onRotateActivityClick"/>
+
     <Button
         android:layout_below="@id/rotate_activity"
         android:id="@+id/stack_activity"
@@ -54,8 +59,16 @@
         android:layout_height="48dp"
         android:onClick="onStackActivityClick"/>
 
-    <android.support.v4.widget.SwipeRefreshLayout
+    <Button
         android:layout_below="@id/stack_activity"
+        android:id="@+id/pager_activity"
+        android:layout_width="match_parent"
+        android:text="@string/pager_activity_caption"
+        android:layout_height="48dp"
+        android:onClick="onPagerActivityClick"/>
+
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:layout_below="@id/pager_activity"
         android:id="@+id/swipe_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent">

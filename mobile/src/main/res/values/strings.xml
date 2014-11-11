@@ -29,5 +29,8 @@
     <string name="no_selected_item">No selected items</string>
     <string name="stack_activity_caption">BackStack sample</string>
     <string name="add_fragment">add fragment</string>
+    <string name="pager_activity_caption">ViewPager sample</string>
+    <string name="add_tab">add</string>
+    <string name="size">size</string>
 
 </resources>

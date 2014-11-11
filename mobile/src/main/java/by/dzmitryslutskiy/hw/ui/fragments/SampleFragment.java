@@ -3,6 +3,7 @@ package by.dzmitryslutskiy.hw.ui.fragments;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +18,8 @@ import by.dzmitryslutskiy.hw.R;
  * Created by Dzmitry Slutskiy.
  */
 public class SampleFragment extends Fragment {
+    public static int COUNTER = 0;
+    public static final Object mCounterLocker = new Object();
 
     public static final String ARG_TEXT = "argText";
 
@@ -24,8 +27,21 @@ public class SampleFragment extends Fragment {
     //  UI
     private TextView mTextViewContent;
 
-    public SampleFragment() {/*   code    */}
+    public SampleFragment() {
+        synchronized (mCounterLocker) {
+            COUNTER++;
+            Log.d("SampleFragment", "count: " + COUNTER);
+        }
+    }
 
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        synchronized (mCounterLocker) {
+            COUNTER--;
+            Log.d("SampleFragment.finalize", "count: " + COUNTER);
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -45,7 +61,7 @@ public class SampleFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_detail, container, false);
 
         mTextViewContent = (TextView) view.findViewById(android.R.id.text1);
-        mTextViewContent.setText(mText);
+        mTextViewContent.setText(mText + " this: " + this);
 
         return view;
     }

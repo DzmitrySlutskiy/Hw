@@ -105,6 +105,11 @@
             android:label="@string/stack_activity_caption"
             android:parentActivityName=".ui.activities.MainActivity"
             />
+        <activity
+            android:name=".ui.activities.PagerActivity"
+            android:label="@string/pager_activity_caption"
+            android:parentActivityName=".ui.activities.MainActivity"
+            />
         <provider
             android:authorities="by.dzmitryslutskiy.hw.providers.testprovider"
             android:name="by.dzmitryslutskiy.hw.providers.TestProvider"
