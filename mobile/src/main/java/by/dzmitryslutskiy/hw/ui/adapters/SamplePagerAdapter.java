@@ -1,5 +1,7 @@
 package by.dzmitryslutskiy.hw.ui.adapters;
 
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
@@ -9,7 +11,8 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-import by.dzmitryslutskiy.hw.ui.fragments.SampleFragment;
+import by.dzmitryslutskiy.hw.bo.Countries;
+import by.dzmitryslutskiy.hw.ui.fragments.CountryFragment;
 
 /**
  * SamplePagerAdapter
@@ -19,10 +22,17 @@ import by.dzmitryslutskiy.hw.ui.fragments.SampleFragment;
  */
 public class SamplePagerAdapter extends FragmentStatePagerAdapter {
     public static final String TAG = SamplePagerAdapter.class.getSimpleName();
+
     private static final int MAX_COUNT = 150;
     public static final int MIN_COUNT = 5;
 
+    public static final String KEY_COUNTRIES = "mCountries";
+    public static final String KEY_LIST_SIZE = "mStringList.listSize";
+    public static final String KEY_STRING_LIST = "mStringList";
+
     List<String> mStringList;
+    Countries mCountries;
+
     ActionBar mActionBar;
     ActionBar.TabListener mTabListener;
 
@@ -38,21 +48,17 @@ public class SamplePagerAdapter extends FragmentStatePagerAdapter {
 
     @Override
     public int getCount() {
-//        Log.d(TAG, "getCount:" + mStringList.size());
         return mStringList.size();
     }
 
     @Override
     public Fragment getItem(int i) {
         Log.d(TAG, "getItem:" + i);
-        if (mStringList.size() > i) {
-            Fragment fragment = new SampleFragment();
-            fragment.setArguments(SampleFragment.prepareBundle(mStringList.get(i)));
-
-            return fragment;
-        } else {
-            throw new IllegalArgumentException("Size of elements: " + mStringList.size() + " required: " + i);
+        CountryFragment fragment = new CountryFragment();
+        if (mCountries != null) {
+            fragment.setListCountry(mCountries);
         }
+        return fragment;
     }
 
 
@@ -66,7 +72,7 @@ public class SamplePagerAdapter extends FragmentStatePagerAdapter {
         Log.d(TAG, "add:" + text);
         if (mStringList.size() < MAX_COUNT) {
             mStringList.add(text);
-
+            notifyDataSetChanged();
             mActionBar.addTab(mActionBar.newTab()
                     .setText("Tab " + (mActionBar.getTabCount() + 1))
                     .setTabListener(mTabListener));
@@ -75,5 +81,44 @@ public class SamplePagerAdapter extends FragmentStatePagerAdapter {
         }
 
         return false;
+    }
+
+    public void updateCountryList(Countries countries) {
+        mCountries = countries;
+    }
+
+    @Override
+    public Parcelable saveState() {
+        Parcelable parcelable = super.saveState();
+
+        if (parcelable != null && parcelable instanceof Bundle) {
+            Bundle bundle = (Bundle) parcelable;
+            bundle.putParcelable(KEY_COUNTRIES, mCountries);
+            bundle.putInt(KEY_LIST_SIZE, mStringList == null ? 0 : mStringList.size());
+
+            for (int i = 0; i < mStringList.size(); i++) {
+                bundle.putString(KEY_STRING_LIST + i, mStringList.get(i));
+            }
+        }
+
+        return parcelable;
+    }
+
+    @Override
+    public void restoreState(Parcelable state, ClassLoader loader) {
+        super.restoreState(state, loader);
+
+        if (state != null && state instanceof Bundle) {
+            Bundle bundle = (Bundle) state;
+
+            mCountries = bundle.getParcelable(KEY_COUNTRIES);
+            int size = bundle.getInt(KEY_LIST_SIZE);
+            mStringList = new ArrayList<String>();
+            if (size > 0) {
+                for (int i = 0; i < size; i++) {
+                    add(bundle.getString(KEY_STRING_LIST + i));
+                }
+            }
+        }
     }
 }

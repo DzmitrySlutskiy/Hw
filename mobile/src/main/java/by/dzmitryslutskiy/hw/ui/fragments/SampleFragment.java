@@ -34,14 +34,14 @@ public class SampleFragment extends Fragment {
         }
     }
 
-    @Override
+    /*@Override
     protected void finalize() throws Throwable {
         super.finalize();
         synchronized (mCounterLocker) {
             COUNTER--;
             Log.d("SampleFragment.finalize", "count: " + COUNTER);
         }
-    }
+    }*/
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

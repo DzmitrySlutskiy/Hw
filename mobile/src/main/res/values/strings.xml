@@ -32,5 +32,8 @@
     <string name="pager_activity_caption">ViewPager sample</string>
     <string name="add_tab">add</string>
     <string name="size">size</string>
+    <string name="flag">flag</string>
+    <string name="country">Country</string>
+    <string name="country_full_name">Country fullname</string>
 
 </resources>
